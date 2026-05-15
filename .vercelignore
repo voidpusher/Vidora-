@@ -1,19 +1,11 @@
-# Local environment and database
 .env
 *.db
 *.sqlite
 *.sqlite3
-
-# Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
-
-# Logs
 *.log
-
-# Local-only admin database viewer
 public/admin.html
 public/admin.css
 public/admin.js
-
-.vercel
