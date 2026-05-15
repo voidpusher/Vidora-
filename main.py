@@ -41,6 +41,7 @@ PORT = int(os.environ.get("PORT", "3000"))
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 ADMIN_VIEWER_ENABLED = os.environ.get("ADMIN_VIEWER_ENABLED", "0").lower() in {"1", "true", "yes"}
 SQLITE_FALLBACK_PATH = Path(os.environ.get("SQLITE_FALLBACK_PATH", "/tmp/coursetube_dev.db" if os.environ.get("VERCEL") else ROOT / "coursetube_dev.db"))
+IS_PRODUCTION = bool(os.environ.get("VERCEL"))
 HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
@@ -690,6 +691,25 @@ def build_course(playlist_url: str, videos: list[dict], pace: str = "standard", 
 
 
 class CourseTubeHandler(BaseHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; "
+            "img-src 'self' https://i.ytimg.com data:; connect-src 'self'; script-src 'self'; style-src 'self'; base-uri 'self'; form-action 'self'",
+        )
+        super().end_headers()
+
+    def session_cookie(self, token: str, max_age: int) -> str:
+        secure = "; Secure" if IS_PRODUCTION else ""
+        return f"ct_session={urllib.parse.quote(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age={max_age}{secure}"
+
+    def send_error_json(self, error: Exception):
+        message = "Something went wrong." if IS_PRODUCTION else str(error) or "Something went wrong."
+        self.send_json(500, {"error": message})
+
     def send_json(self, status: int, payload: dict, headers: dict | None = None):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
@@ -742,7 +762,7 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
             200,
             {"user": user},
             {
-                "Set-Cookie": f"ct_session={urllib.parse.quote(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000"
+                "Set-Cookie": self.session_cookie(token, 2592000)
             },
         )
 
@@ -753,8 +773,8 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
                 name = str(body.get("name", "")).strip() or str(body.get("email", "")).split("@")[0]
                 email = str(body.get("email", "")).strip().lower()
                 password = str(body.get("password", ""))
-                if not email or "@" not in email or len(password) < 6:
-                    self.send_json(422, {"error": "Use a valid email and a password with at least 6 characters."})
+                if not email or "@" not in email or len(password) < 8:
+                    self.send_json(422, {"error": "Use a valid email and a password with at least 8 characters."})
                     return
                 try:
                     with db_connect() as db:
@@ -800,7 +820,7 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
                     with db_connect() as db:
                         with db_cursor(db) as cursor:
                             cursor.execute(param("DELETE FROM sessions WHERE token = %s"), (token,))
-                self.send_json(200, {"ok": True}, {"Set-Cookie": "ct_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0"})
+                self.send_json(200, {"ok": True}, {"Set-Cookie": self.session_cookie("", 0)})
                 return
 
             if self.path == "/api/courses":
@@ -877,7 +897,7 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
         except Exception as error:
-            self.send_json(500, {"error": str(error) or "Something went wrong."})
+            self.send_error_json(error)
 
     def do_GET(self):
         if self.path == "/api/admin/db":
@@ -887,7 +907,7 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
             try:
                 self.send_json(200, admin_database_snapshot())
             except Exception as error:
-                self.send_json(500, {"error": str(error)})
+                self.send_error_json(error)
             return
 
         if self.path == "/api/auth/me":
@@ -948,7 +968,7 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
         except Exception as error:
-            self.send_json(500, {"error": str(error) or "Something went wrong."})
+            self.send_error_json(error)
 
 
 if __name__ == "__main__":
