@@ -1,0 +1,14 @@
+{
+  "name": "playlist-to-course",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python main.py",
+    "dev": "python main.py",
+    "start:node": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

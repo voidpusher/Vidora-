@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CourseTube</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="app" id="app">
+      <header class="topbar">
+        <button class="brand-button" type="button" data-route="landing" aria-label="CourseTube home">
+          <img src="/course-map.svg" alt="" class="brand-mark">
+          <span>CourseTube</span>
+        </button>
+        <nav class="main-nav" id="main-nav">
+          <button type="button" data-route="landing">Home</button>
+          <button type="button" data-route="dashboard" data-auth-only>Dashboard</button>
+          <button type="button" data-route="create" data-auth-only>Create course</button>
+        </nav>
+        <div class="account-actions" id="account-actions"></div>
+      </header>
+
+      <main>
+        <section class="view landing-view" id="landing-view">
+          <div class="hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Playlist learning platform</p>
+              <h1>Watch YouTube playlists as structured courses.</h1>
+              <p class="hero-text">Paste a playlist, generate a guided course, then study inside your own dashboard with embedded videos, modules, checkpoints, notes, and progress.</p>
+              <div class="hero-actions">
+                <button class="primary-button" type="button" data-open-auth="signup">Start learning</button>
+                <button class="secondary-button" type="button" data-open-auth="signin">Sign in</button>
+              </div>
+            </div>
+            <div class="hero-product" aria-hidden="true">
+              <div class="product-window">
+                <div class="window-rail">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <div class="video-surface">
+                  <div class="play-button"></div>
+                  <div class="video-caption">
+                    <strong>Lesson 04</strong>
+                    <span>Building the project workflow</span>
+                  </div>
+                </div>
+                <div class="product-lessons">
+                  <span class="is-done">01</span>
+                  <span class="is-done">02</span>
+                  <span class="is-active">03</span>
+                  <span>04</span>
+                  <span>05</span>
+                </div>
+              </div>
+              <div class="module-preview">
+                <span><strong>Foundations</strong></span>
+                <span><strong>Practice</strong></span>
+                <span><strong>Capstone</strong></span>
+              </div>
+            </div>
+          </div>
+          <div class="feature-strip">
+            <article>
+              <div class="feature-icon">01</div>
+              <strong>Generate</strong>
+              <span>Turn playlist videos into modules and lesson goals.</span>
+            </article>
+            <article>
+              <div class="feature-icon">02</div>
+              <strong>Watch</strong>
+              <span>Play YouTube videos directly in the course window.</span>
+            </article>
+            <article>
+              <div class="feature-icon">03</div>
+              <strong>Manage</strong>
+              <span>Keep courses, progress, notes, and exports in one place.</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="view dashboard-view hidden" id="dashboard-view">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">Learning dashboard</p>
+              <h2>Your courses</h2>
+            </div>
+            <button class="primary-button" type="button" data-route="create">Create course</button>
+          </div>
+          <div class="stats-row" id="stats-row"></div>
+          <div class="course-grid" id="course-grid"></div>
+          <div class="empty-library hidden" id="empty-library">
+            <h3>No courses yet</h3>
+            <p>Create your first course from a YouTube playlist.</p>
+            <button class="primary-button" type="button" data-route="create">Create course</button>
+          </div>
+        </section>
+
+        <section class="view create-view hidden" id="create-view">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">Course builder</p>
+              <h2>Create from YouTube</h2>
+            </div>
+          </div>
+
+          <div class="builder-layout">
+            <form id="course-form" class="builder-card">
+              <label for="playlistUrl">YouTube playlist link</label>
+              <input id="playlistUrl" name="playlistUrl" type="url" placeholder="https://www.youtube.com/playlist?list=..." autocomplete="off">
+
+              <div class="settings-grid">
+                <label>
+                  Pace
+                  <select id="pace" name="pace">
+                    <option value="standard">Standard</option>
+                    <option value="fast">Fast</option>
+                    <option value="deep">Deep study</option>
+                  </select>
+                </label>
+                <label>
+                  Modules
+                  <input id="modules" name="modules" type="number" min="1" max="20" placeholder="Auto">
+                </label>
+              </div>
+
+              <details class="manual-box">
+                <summary>Paste video titles manually</summary>
+                <textarea id="videoTitles" name="videoTitles" rows="8" placeholder="1. Introduction&#10;2. Setup and tools&#10;3. First project"></textarea>
+              </details>
+
+              <button type="submit" class="primary-button full-width">Generate course</button>
+              <div class="status-strip" id="status-strip">
+                <span class="status-dot"></span>
+                <span id="status-text">Ready to build a course.</span>
+              </div>
+            </form>
+
+            <aside class="builder-notes">
+              <h3>YouTube integration</h3>
+              <p>For playback, public YouTube videos are embedded directly in the course window.</p>
+              <p>For reliable playlist import, set `YOUTUBE_API_KEY` before starting the server. Without it, the app uses the current no-key importer and manual fallback.</p>
+              <div class="flow-list">
+                <span>Paste playlist</span>
+                <span>Generate modules</span>
+                <span>Watch and track progress</span>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view course-view hidden" id="course-view">
+          <div class="course-shell">
+            <aside class="course-sidebar">
+              <button class="ghost-button" type="button" data-route="dashboard">Back to dashboard</button>
+              <h2 id="active-course-title"></h2>
+              <div class="progress-block">
+                <div class="progress-track"><span id="progress-fill"></span></div>
+                <p id="progress-label"></p>
+              </div>
+              <div class="module-list" id="module-list"></div>
+            </aside>
+
+            <section class="lesson-stage">
+              <div class="player-frame" id="player-frame"></div>
+              <div class="lesson-panel">
+                <div>
+                  <p class="eyebrow" id="lesson-meta"></p>
+                  <h2 id="lesson-title"></h2>
+                  <p id="lesson-focus"></p>
+                  <p id="lesson-activity"></p>
+                </div>
+                <div class="lesson-actions">
+                  <button class="secondary-button" type="button" id="mark-complete">Mark complete</button>
+                  <button class="secondary-button" type="button" id="copy-markdown">Copy Markdown</button>
+                  <button class="secondary-button" type="button" id="copy-json">Copy JSON</button>
+                  <button class="secondary-button" type="button" id="print-course">Print</button>
+                </div>
+              </div>
+              <section class="study-tabs">
+                <div class="tab-list" role="tablist" aria-label="Study tools">
+                  <button class="tab-button is-active" type="button" data-study-tab="summary">Summary</button>
+                  <button class="tab-button" type="button" data-study-tab="notes">Notes</button>
+                  <button class="tab-button" type="button" data-study-tab="focus">Focus</button>
+                </div>
+
+                <div class="tab-panel" id="summary-panel">
+                  <div class="summary-card">
+                    <p class="eyebrow">AI summary</p>
+                    <h3 id="summary-title"></h3>
+                    <p id="summary-text"></p>
+                    <ul id="summary-points"></ul>
+                    <div class="summary-terms" id="summary-terms"></div>
+                    <div class="summary-actions">
+                      <button class="secondary-button" type="button" id="refresh-summary">Refresh from YouTube</button>
+                    </div>
+                    <details class="transcript-box">
+                      <summary>Paste transcript manually</summary>
+                      <textarea id="manual-transcript" rows="7" placeholder="Paste the video transcript here when YouTube does not expose readable captions..."></textarea>
+                      <button class="primary-button" type="button" id="summarize-transcript">Summarize transcript</button>
+                    </details>
+                  </div>
+                </div>
+
+                <div class="tab-panel hidden" id="notes-panel">
+                  <label class="notes-box">
+                    Course notes
+                    <textarea id="course-notes" rows="7" placeholder="Write notes for this course..."></textarea>
+                  </label>
+                </div>
+
+                <div class="tab-panel hidden" id="focus-panel">
+                  <div class="focus-card">
+                    <div>
+                      <p class="eyebrow">Focus timer</p>
+                      <h3 id="timer-label">Study session</h3>
+                      <div class="timer-display" id="timer-display">25:00</div>
+                    </div>
+                    <div class="timer-controls">
+                      <label>
+                        Study
+                        <input id="study-minutes" type="number" min="1" max="180" value="25">
+                      </label>
+                      <label>
+                        Break
+                        <input id="break-minutes" type="number" min="1" max="60" value="5">
+                      </label>
+                    </div>
+                    <div class="timer-actions">
+                      <button class="primary-button" type="button" id="start-study">Start study</button>
+                      <button class="secondary-button" type="button" id="start-break">Start break</button>
+                      <button class="secondary-button" type="button" id="pause-timer">Pause</button>
+                      <button class="secondary-button" type="button" id="reset-timer">Reset</button>
+                    </div>
+                    <p class="timer-hint" id="timer-hint">Set a timer, start a focused session, then come back to the lesson task.</p>
+                  </div>
+                </div>
+              </section>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="auth-modal" id="auth-modal">
+      <form method="dialog" class="auth-card" id="auth-form">
+        <button class="close-button" type="button" id="close-auth" aria-label="Close">x</button>
+        <p class="eyebrow" id="auth-mode-label">Sign in</p>
+        <h2 id="auth-title">Welcome back</h2>
+        <label>
+          Name
+          <input id="auth-name" name="name" type="text" placeholder="Sanchit">
+        </label>
+        <label>
+          Email
+          <input id="auth-email" name="email" type="email" placeholder="you@example.com" required>
+        </label>
+        <label>
+          Password
+          <input id="auth-password" name="password" type="password" placeholder="Minimum 6 characters" required>
+        </label>
+        <button class="primary-button full-width" type="submit" id="auth-submit">Continue</button>
+        <p class="auth-error hidden" id="auth-error"></p>
+        <p class="auth-small" id="auth-switch"></p>
+      </form>
+    </dialog>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
