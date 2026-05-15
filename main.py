@@ -40,7 +40,7 @@ load_env_file()
 PORT = int(os.environ.get("PORT", "3000"))
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 ADMIN_VIEWER_ENABLED = os.environ.get("ADMIN_VIEWER_ENABLED", "0").lower() in {"1", "true", "yes"}
-SQLITE_FALLBACK_PATH = ROOT / "coursetube_dev.db"
+SQLITE_FALLBACK_PATH = Path(os.environ.get("SQLITE_FALLBACK_PATH", "/tmp/coursetube_dev.db" if os.environ.get("VERCEL") else ROOT / "coursetube_dev.db"))
 HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
