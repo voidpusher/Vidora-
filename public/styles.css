@@ -89,7 +89,6 @@ p {
 .header-actions,
 .account-actions,
 .hero-actions,
-.lesson-actions,
 .summary-actions,
 .timer-actions {
   display: flex;
@@ -1143,10 +1142,7 @@ textarea:focus {
 }
 
 .lesson-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 18px;
+  display: block;
   padding: 18px 20px;
 }
 
@@ -1166,14 +1162,6 @@ textarea:focus {
   font-size: 0.94rem;
 }
 
-.lesson-actions {
-  display: grid;
-  grid-template-columns: 1fr;
-  min-width: 188px;
-  align-items: start;
-  gap: 9px;
-}
-
 .study-tabs {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.045);
@@ -1181,10 +1169,17 @@ textarea:focus {
 
 .tab-list {
   display: flex;
+  align-items: center;
   gap: 8px;
   padding: 10px;
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
+}
+
+.mark-complete-button {
+  min-height: 40px;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .tab-button {
@@ -1842,7 +1837,6 @@ body[data-theme="dark"] .tab-button.is-active {
     grid-template-columns: 1fr;
   }
 
-  .lesson-panel,
   .focus-card {
     grid-template-columns: 1fr;
   }
@@ -1877,15 +1871,15 @@ body[data-theme="dark"] .tab-button.is-active {
     width: 100%;
   }
 
-  .lesson-actions {
-    min-width: 0;
+  .mark-complete-button {
+    width: auto;
+    margin-left: 0;
   }
 }
 
 @media print {
   .topbar,
   .course-sidebar,
-  .lesson-actions,
   .notes-box {
     display: none;
   }

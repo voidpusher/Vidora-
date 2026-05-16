@@ -56,9 +56,6 @@ const startStudy = document.querySelector("#start-study");
 const startBreak = document.querySelector("#start-break");
 const pauseTimer = document.querySelector("#pause-timer");
 const resetTimer = document.querySelector("#reset-timer");
-const copyMarkdown = document.querySelector("#copy-markdown");
-const copyJson = document.querySelector("#copy-json");
-const printCourse = document.querySelector("#print-course");
 
 let authMode = "signin";
 let user = null;
@@ -497,11 +494,6 @@ function courseToMarkdown(course) {
   return lines.join("\n");
 }
 
-async function copyText(text, successMessage) {
-  await navigator.clipboard.writeText(text);
-  setStatus(successMessage, "ready");
-}
-
 document.body.addEventListener("click", (event) => {
   const routeButton = event.target.closest("[data-route]");
   const authButton = event.target.closest("[data-open-auth]");
@@ -701,18 +693,6 @@ studyMinutes.addEventListener("input", () => {
 breakMinutes.addEventListener("input", () => {
   if (!timer.running && timer.mode === "break") resetTimerToInputs();
 });
-
-copyMarkdown.addEventListener("click", () => {
-  const course = findCourse();
-  if (course) copyText(courseToMarkdown(course), "Markdown copied.");
-});
-
-copyJson.addEventListener("click", () => {
-  const course = findCourse();
-  if (course) copyText(JSON.stringify(course, null, 2), "JSON copied.");
-});
-
-printCourse.addEventListener("click", () => window.print());
 
 async function loadSession() {
   try {
