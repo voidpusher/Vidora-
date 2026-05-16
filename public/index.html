@@ -27,7 +27,7 @@
             <div class="hero-copy">
               <p class="eyebrow">Playlist learning platform</p>
               <h1>Watch YouTube playlists as structured courses.</h1>
-              <p class="hero-text">Paste a playlist, generate a guided course, then study inside your own dashboard with embedded videos, modules, checkpoints, notes, and progress.</p>
+              <p class="hero-text">Paste a playlist, generate modules, watch lessons, take notes, track progress, and stay focused in one calm learning workspace.</p>
               <div class="hero-actions">
                 <button class="primary-button" type="button" data-open-auth="signup">Start learning</button>
                 <button class="secondary-button" type="button" data-open-auth="signin">Sign in</button>
@@ -44,7 +44,7 @@
                   <div class="play-button"></div>
                   <div class="video-caption">
                     <strong>Lesson 04</strong>
-                    <span>Building the project workflow</span>
+                    <span>Reusable UI components</span>
                   </div>
                 </div>
                 <div class="product-lessons">
@@ -183,6 +183,7 @@
                 <div class="tab-list" role="tablist" aria-label="Study tools">
                   <button class="tab-button is-active" type="button" data-study-tab="summary">Summary</button>
                   <button class="tab-button" type="button" data-study-tab="notes">Notes</button>
+                  <button class="tab-button" type="button" data-study-tab="transcript">Transcript</button>
                   <button class="tab-button" type="button" data-study-tab="focus">Focus</button>
                 </div>
 
@@ -196,11 +197,6 @@
                     <div class="summary-actions">
                       <button class="secondary-button" type="button" id="refresh-summary">Refresh from YouTube</button>
                     </div>
-                    <details class="transcript-box">
-                      <summary>Paste transcript manually</summary>
-                      <textarea id="manual-transcript" rows="7" placeholder="Paste the video transcript here when YouTube does not expose readable captions..."></textarea>
-                      <button class="primary-button" type="button" id="summarize-transcript">Summarize transcript</button>
-                    </details>
                   </div>
                 </div>
 
@@ -209,6 +205,16 @@
                     Course notes
                     <textarea id="course-notes" rows="7" placeholder="Write notes for this course..."></textarea>
                   </label>
+                </div>
+
+                <div class="tab-panel hidden" id="transcript-panel">
+                  <div class="transcript-card">
+                    <p class="eyebrow">Manual transcript</p>
+                    <h3>Paste transcript for this lesson</h3>
+                    <p>Use this when YouTube does not expose readable captions or the video description is too thin.</p>
+                    <textarea id="manual-transcript" rows="8" placeholder="Paste the video transcript here..."></textarea>
+                    <button class="primary-button" type="button" id="summarize-transcript">Summarize transcript</button>
+                  </div>
                 </div>
 
                 <div class="tab-panel hidden" id="focus-panel">
@@ -255,11 +261,11 @@
         </label>
         <label>
           Email
-          <input id="auth-email" name="email" type="email" placeholder="you@example.com" required>
+          <input id="auth-email" name="email" type="text" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
         </label>
         <label>
           Password
-          <input id="auth-password" name="password" type="password" placeholder="Minimum 6 characters" required>
+          <input id="auth-password" name="password" type="password" placeholder="Minimum 8 characters" required>
         </label>
         <button class="primary-button full-width" type="submit" id="auth-submit">Continue</button>
         <p class="auth-error hidden" id="auth-error"></p>

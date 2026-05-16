@@ -308,6 +308,7 @@ function showStudyTab(tabName) {
   });
   document.querySelector("#summary-panel").classList.toggle("hidden", tabName !== "summary");
   document.querySelector("#notes-panel").classList.toggle("hidden", tabName !== "notes");
+  document.querySelector("#transcript-panel").classList.toggle("hidden", tabName !== "transcript");
   document.querySelector("#focus-panel").classList.toggle("hidden", tabName !== "focus");
 }
 
@@ -522,8 +523,8 @@ document.body.addEventListener("click", (event) => {
 authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setAuthError("");
-  if (authPassword.value.length < 6) {
-    authPassword.setCustomValidity("Use at least 6 characters.");
+  if (authPassword.value.length < 8) {
+    authPassword.setCustomValidity("Use at least 8 characters.");
     authPassword.reportValidity();
     return;
   }
