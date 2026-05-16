@@ -466,6 +466,9 @@ h3 {
 }
 
 .feature-strip span,
+.section-heading p,
+.process-grid p,
+.capability-grid span,
 .course-card p,
 .builder-notes p,
 .lesson-panel p,
@@ -475,6 +478,98 @@ h3 {
 .timer-hint {
   color: var(--muted);
   line-height: 1.58;
+}
+
+.landing-section {
+  margin-top: clamp(44px, 7vw, 86px);
+}
+
+.section-heading {
+  display: grid;
+  gap: 6px;
+  max-width: 760px;
+  margin-bottom: 22px;
+}
+
+.section-heading h2 {
+  margin-bottom: 4px;
+}
+
+.process-grid,
+.capability-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.process-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.process-grid article,
+.capability-grid article {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  backdrop-filter: blur(16px);
+}
+
+.process-grid article {
+  padding: 22px;
+}
+
+.process-number {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  color: white;
+  background: linear-gradient(135deg, var(--pink), var(--violet));
+  font-weight: 950;
+}
+
+.capability-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.capability-grid article {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.capability-grid strong {
+  color: var(--ink);
+}
+
+.journey-section {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(217, 70, 239, 0.12), rgba(20, 184, 166, 0.08)),
+    var(--panel);
+}
+
+.journey-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.journey-strip span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 0.9rem;
+  font-weight: 850;
 }
 
 .page-heading {
@@ -1126,7 +1221,9 @@ textarea:focus {
   }
 
   .feature-strip,
-  .stats-row {
+  .stats-row,
+  .process-grid,
+  .capability-grid {
     grid-template-columns: 1fr;
   }
 
