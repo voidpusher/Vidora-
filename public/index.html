@@ -3,15 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CourseTube</title>
+    <title>Vidora</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
     <div class="app" id="app">
       <header class="topbar">
-        <button class="brand-button" type="button" data-route="landing" aria-label="CourseTube home">
+        <button class="brand-button" type="button" data-route="landing" aria-label="Vidora home">
           <img src="/course-map.svg" alt="" class="brand-mark">
-          <span>CourseTube</span>
+          <span>Vidora</span>
         </button>
         <nav class="main-nav" id="main-nav">
           <button type="button" data-route="landing">Home</button>
@@ -30,135 +33,126 @@
       <main>
         <section class="view landing-view" id="landing-view">
           <div class="hero">
-            <div class="hero-copy">
-              <p class="eyebrow">Playlist learning platform</p>
-              <h1>Watch YouTube playlists as structured courses.</h1>
-              <p class="hero-text">Paste a playlist, generate modules, watch lessons, take notes, track progress, and stay focused in one calm learning workspace.</p>
+            <div class="hero-copy reveal">
+              <p class="eyebrow">Self-paced learning, organized</p>
+              <h1 class="display">Turn YouTube playlists into <span class="ink-accent">courses worth finishing</span>.</h1>
+              <div class="rule"></div>
+              <p class="lede">Vidora rebuilds any playlist into a structured course with modules, AI summaries, notes and honest progress tracking, so you actually reach the end instead of leaving another tab half-watched.</p>
               <div class="hero-actions">
-                <button class="primary-button" type="button" data-open-auth="signup">Start learning</button>
+                <button class="primary-button" type="button" data-open-auth="signup">Start building</button>
                 <button class="secondary-button" type="button" data-open-auth="signin">Sign in</button>
               </div>
             </div>
-            <div class="hero-product" aria-hidden="true">
-              <div class="product-window">
-                <div class="window-rail">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+
+            <div class="hero-figure reveal">
+              <article class="figure-card" aria-hidden="true">
+                <div class="figure-head">
+                  <span class="figure-title">JavaScript, from scratch</span>
+                  <span class="figure-meta">Module 2 of 6</span>
                 </div>
-                <div class="video-surface">
-                  <div class="play-button"></div>
-                  <div class="video-caption">
-                    <strong>Lesson 04</strong>
-                    <span>Reusable UI components</span>
-                  </div>
+                <div class="figure-progress">
+                  <div class="progress-track"><span style="width:73%"></span></div>
+                  <span class="figure-pct">73%</span>
                 </div>
-                <div class="product-lessons">
-                  <span class="is-done">01</span>
-                  <span class="is-done">02</span>
-                  <span class="is-active">03</span>
-                  <span>04</span>
-                  <span>05</span>
-                </div>
-              </div>
-              <div class="module-preview">
-                <span><strong>Foundations</strong></span>
-                <span><strong>Practice</strong></span>
-                <span><strong>Capstone</strong></span>
-              </div>
+                <ul class="figure-lessons">
+                  <li class="done"><span class="dot-check"></span> Variables &amp; data types</li>
+                  <li class="done"><span class="dot-check"></span> Functions and scope</li>
+                  <li class="active"><span class="dot-check"></span> Arrays and objects</li>
+                  <li><span class="dot-check"></span> DOM manipulation</li>
+                </ul>
+              </article>
+              <span class="tag tag-a" aria-hidden="true">73% complete</span>
+              <span class="tag solid tag-b" aria-hidden="true">7-day streak</span>
             </div>
-          </div>
-          <div class="feature-strip">
-            <article>
-              <div class="feature-icon">01</div>
-              <strong>Generate</strong>
-              <span>Turn playlist videos into modules and lesson goals.</span>
-            </article>
-            <article>
-              <div class="feature-icon">02</div>
-              <strong>Watch</strong>
-              <span>Play YouTube videos directly in the course window.</span>
-            </article>
-            <article>
-              <div class="feature-icon">03</div>
-              <strong>Manage</strong>
-              <span>Keep courses, progress, notes, and exports in one place.</span>
-            </article>
           </div>
 
           <section class="landing-section">
-            <div class="section-heading">
-              <p class="eyebrow">How it works</p>
-              <h2>From playlist to progress.</h2>
-              <p>CourseTube keeps the workflow simple: bring a playlist, turn it into a course, then study lesson by lesson with the right tools beside the video.</p>
+            <div class="sec-head">
+              <div class="sec-title">
+                <h2>From link to lesson in three steps.</h2>
+                <div class="rule h-rule"></div>
+              </div>
+              <p class="sec-lede">No setup ritual. Paste, generate, study. Vidora handles the structure so you can keep your attention on the material.</p>
             </div>
-            <div class="process-grid">
-              <article>
-                <span class="process-number">1</span>
-                <h3>Paste a YouTube playlist</h3>
-                <p>Add a public playlist link and choose the pace that matches how deeply you want to study.</p>
+            <div class="program-rows">
+              <article class="program-row">
+                <span class="program-num">01</span>
+                <div class="program-body">
+                  <h3>Paste a playlist</h3>
+                  <p>Add a public YouTube playlist link, or paste video titles manually if you prefer to curate the order yourself.</p>
+                </div>
+                <span class="program-tag">Import</span>
               </article>
-              <article>
-                <span class="process-number">2</span>
-                <h3>Generate a course structure</h3>
-                <p>The app organizes videos into modules, lessons, checkpoints, practice tasks, and a course objective.</p>
+              <article class="program-row">
+                <span class="program-num">02</span>
+                <div class="program-body">
+                  <h3>Generate the plan</h3>
+                  <p>Vidora groups videos into modules with lesson focus areas, summaries and practice tasks. A real syllabus, not a watch-later pile.</p>
+                </div>
+                <span class="program-tag">Structure</span>
               </article>
-              <article>
-                <span class="process-number">3</span>
-                <h3>Study inside one workspace</h3>
-                <p>Watch the video, read the summary, write notes, paste transcripts, and run focus sessions without leaving the course.</p>
+              <article class="program-row">
+                <span class="program-num">03</span>
+                <div class="program-body">
+                  <h3>Study and track</h3>
+                  <p>Watch inside a focused workspace, take notes, run a focus timer, and mark lessons complete as your progress is saved automatically.</p>
+                </div>
+                <span class="program-tag">Progress</span>
               </article>
             </div>
           </section>
 
-          <section class="landing-section">
-            <div class="section-heading">
-              <p class="eyebrow">Learning workspace</p>
-              <h2>Everything a playlist needs to become usable.</h2>
+          <section class="figures">
+            <div class="figure">
+              <div class="num">1</div>
+              <div class="lab">link to start a course</div>
             </div>
-            <div class="capability-grid">
+            <div class="figure">
+              <div class="num">6</div>
+              <div class="lab">study tools per lesson</div>
+            </div>
+            <div class="figure">
+              <div class="num">100%</div>
+              <div class="lab">progress saved as you go</div>
+            </div>
+            <div class="figure">
+              <div class="num">0</div>
+              <div class="lab">half-watched tabs left behind</div>
+            </div>
+          </section>
+
+          <section class="landing-section">
+            <div class="sec-head">
+              <div class="sec-title">
+                <h2>Everything a lesson needs, in one place.</h2>
+                <div class="rule h-rule"></div>
+              </div>
+              <p class="sec-lede">A quiet workspace that keeps the video, the notes and the plan together.</p>
+            </div>
+            <div class="feature-strip">
               <article>
-                <strong>Embedded lessons</strong>
-                <span>Play public YouTube videos directly in the course window.</span>
+                <span class="feat-num">Generate</span>
+                <h3>Structured modules</h3>
+                <p>Convert playlist videos into modules, checkpoints and clear lesson goals.</p>
               </article>
               <article>
-                <strong>Summary tab</strong>
-                <span>Generate a concise lesson overview, key points, and a question to answer.</span>
+                <span class="feat-num">Watch</span>
+                <h3>Focused workspace</h3>
+                <p>Study from an embedded player with AI summaries, notes and a focus timer.</p>
               </article>
               <article>
-                <strong>Notes tab</strong>
-                <span>Keep course notes saved with your learning path.</span>
-              </article>
-              <article>
-                <strong>Transcript tab</strong>
-                <span>Paste a transcript manually when YouTube does not expose readable captions.</span>
-              </article>
-              <article>
-                <strong>Focus timer</strong>
-                <span>Start study or break sessions while staying in the lesson.</span>
-              </article>
-              <article>
-                <strong>Progress tracking</strong>
-                <span>Mark lessons complete and resume later from your dashboard.</span>
+                <span class="feat-num">Resume</span>
+                <h3>Saved progress</h3>
+                <p>Pick up exactly where you left off from your dashboard, every time.</p>
               </article>
             </div>
           </section>
 
-          <section class="landing-section journey-section">
-            <div class="section-heading">
-              <p class="eyebrow">User flow</p>
-              <h2>Start, generate, study, resume.</h2>
-              <p>The app is designed around the path a learner naturally takes from a YouTube playlist to a finished course.</p>
-            </div>
-            <div class="journey-strip" aria-label="CourseTube user flow">
-              <span>Landing</span>
-              <span>Sign up</span>
-              <span>Dashboard</span>
-              <span>Create course</span>
-              <span>Watch lesson</span>
-              <span>Use tabs</span>
-              <span>Track progress</span>
-              <span>Continue later</span>
+          <section class="cta-band">
+            <div class="cta-inner">
+              <h2>Start your first course today.</h2>
+              <p>Paste a playlist and watch it become a plan in seconds.</p>
+              <button class="primary-button on-ember" type="button" data-open-auth="signup">Create a free account</button>
             </div>
           </section>
         </section>
@@ -273,7 +267,7 @@
 
                 <div class="tab-panel" id="summary-panel">
                   <div class="summary-card">
-                    <p class="eyebrow">AI summary</p>
+                    <p class="eyebrow">Lesson summary</p>
                     <h3 id="summary-title"></h3>
                     <p id="summary-text"></p>
                     <ul id="summary-points"></ul>

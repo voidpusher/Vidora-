@@ -62,7 +62,7 @@ let user = null;
 let courses = [];
 let activeCourseId = null;
 let activeLessonNumber = 1;
-let theme = localStorage.getItem("coursetube-theme") || "light";
+let theme = localStorage.getItem("vidora-theme") || localStorage.getItem("coursetube-theme") || "dark";
 let timer = {
   mode: "study",
   remaining: 25 * 60,
@@ -70,6 +70,14 @@ let timer = {
   interval: null,
   running: false
 };
+
+function debounce(fn, ms) {
+  let id;
+  return (...args) => {
+    clearTimeout(id);
+    id = setTimeout(() => fn(...args), ms);
+  };
+}
 
 function escapeHtml(value = "") {
   return String(value)
@@ -446,7 +454,7 @@ function renderCourseView() {
   lessonTitle.textContent = lesson.title;
   lessonFocus.textContent = lesson.focus;
   lessonActivity.textContent = lesson.activity;
-  markComplete.textContent = course.completed.includes(lesson.number) ? "Completed" : "Mark complete";
+  markComplete.textContent = course.completed.includes(lesson.number) ? "Undo complete" : "Mark complete";
   manualTranscript.value = "";
   loadVideoSummary(course, lesson);
 }
@@ -531,7 +539,8 @@ document.body.addEventListener("click", (event) => {
 
   if (openCourseButton) {
     activeCourseId = openCourseButton.dataset.openCourse;
-    activeLessonNumber = 1;
+    const resumeCourse = courses.find((c) => c.localId === activeCourseId);
+    activeLessonNumber = resumeCourse?.lastLesson || 1;
     showRoute("course");
   }
 
@@ -544,6 +553,11 @@ document.body.addEventListener("click", (event) => {
 
   if (lessonButton) {
     activeLessonNumber = Number(lessonButton.dataset.lesson);
+    const course = findCourse();
+    if (course) {
+      course.lastLesson = activeLessonNumber;
+      saveCourse(course);
+    }
     stopTimerInterval();
     resetTimerToInputs();
     renderCourseView();
@@ -555,7 +569,7 @@ document.body.addEventListener("click", (event) => {
 
 themeToggle.addEventListener("click", () => {
   theme = theme === "dark" ? "light" : "dark";
-  localStorage.setItem("coursetube-theme", theme);
+  localStorage.setItem("vidora-theme", theme);
   applyTheme();
 });
 
@@ -644,17 +658,21 @@ courseForm.addEventListener("submit", async (event) => {
 markComplete.addEventListener("click", () => {
   const course = findCourse();
   if (!course) return;
-  if (!course.completed.includes(activeLessonNumber)) course.completed.push(activeLessonNumber);
+  if (course.completed.includes(activeLessonNumber)) {
+    course.completed = course.completed.filter((n) => n !== activeLessonNumber);
+  } else {
+    course.completed.push(activeLessonNumber);
+  }
   saveCourse(course);
   renderCourseView();
 });
 
-courseNotes.addEventListener("input", () => {
+courseNotes.addEventListener("input", debounce(() => {
   const course = findCourse();
   if (!course) return;
   course.notes = courseNotes.value;
   saveCourse(course);
-});
+}, 500));
 
 startStudy.addEventListener("click", () => startTimer("study"));
 startBreak.addEventListener("click", () => startTimer("break"));

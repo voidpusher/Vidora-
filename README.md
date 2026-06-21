@@ -1,4 +1,4 @@
-# CourseTube
+# Vidora
 
 A local website that turns YouTube playlists into structured courses and lets signed-in users manage and watch those courses inside the app.
 

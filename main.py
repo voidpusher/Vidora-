@@ -44,6 +44,9 @@ SQLITE_FALLBACK_PATH = Path(os.environ.get("SQLITE_FALLBACK_PATH", "/tmp/courset
 IS_PRODUCTION = bool(os.environ.get("VERCEL"))
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
@@ -125,6 +128,7 @@ def init_db() -> None:
                     token TEXT PRIMARY KEY,
                     user_id INTEGER NOT NULL,
                     created_at TEXT NOT NULL,
+                    expires_at TEXT NOT NULL DEFAULT '',
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
 
@@ -138,40 +142,59 @@ def init_db() -> None:
                 );
                 """
             )
+            try:
+                db.execute("ALTER TABLE sessions ADD COLUMN expires_at TEXT NOT NULL DEFAULT ''")
+            except Exception:
+                pass
             return
 
         with db_cursor(db) as cursor:
             cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                id BIGSERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE,
-                password_hash TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS sessions (
-                token TEXT PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                created_at TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            );
-
-            CREATE TABLE IF NOT EXISTS courses (
-                id TEXT PRIMARY KEY,
-                user_id BIGINT NOT NULL,
-                course_json JSONB NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            );
-            """
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    id BIGSERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+                """
             )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS sessions (
+                    token TEXT PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS courses (
+                    id TEXT PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    course_json JSONB NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+                """
+            )
+
+
+SESSION_MAX_AGE = 2592000  # 30 days in seconds
 
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def session_expiry_iso() -> str:
+    from datetime import timedelta
+    return (datetime.now(timezone.utc) + timedelta(seconds=SESSION_MAX_AGE)).isoformat()
 
 
 def hash_password(password: str) -> str:
@@ -491,18 +514,26 @@ def fetch_playlist_videos(playlist_url: str) -> dict:
         return {"videos": [], "source": "manual", "warning": f"Could not reach YouTube from this server: {error}"}
 
 
+PROMO_LINE = re.compile(
+    r"(use\s+code|promo\s*code|coupon|discount|%\s*off|sponsor|sponsored|affiliate|"
+    r"sign\s*up|patreon|merch|giveaway|newsletter|subscribe|follow\s+me|check\s+out\s+my|"
+    r"link\s+in\s+(?:the\s+)?(?:bio|description)|buy\s+now|enroll\s+now|join\s+(?:my|our))",
+    re.I,
+)
+
+
 def clean_video_description(description: str = "") -> str:
-    cleaned = (
-        description.replace("\r", "")
-        .replace("►", " ")
-    )
+    cleaned = description.replace("\r", "").replace("►", " ")
     cleaned = re.sub(r"https?://\S+", " ", cleaned)
     cleaned = re.split(r"\n\s*(?:connect|follow|instagram|telegram|discord|subscribe|links)\b", cleaned, flags=re.I)[0]
     lines = []
     for line in cleaned.split("\n"):
         line = re.sub(r"^\s*\d{1,2}:\d{2}(?::\d{2})?\s*", "", line).strip()
-        if line:
-            lines.append(line)
+        line = re.sub(r"[#@]\w+", "", line).strip()       # drop hashtags / social handles
+        line = re.sub(r"\s{2,}", " ", line)
+        if not line or PROMO_LINE.search(line):           # drop sponsor / promo lines
+            continue
+        lines.append(line)
     return re.sub(r"\s+", " ", ". ".join(lines)).strip()
 
 
@@ -545,7 +576,70 @@ def summarize_text(text: str, lesson_title: str = "") -> dict:
         "points": [item["sentence"] for item in top[1:5]],
         "keyTerms": key_terms,
         "transcriptLength": len(words),
+        "engine": "auto",
     }
+
+
+def summarize_with_claude(text: str, lesson_title: str = "") -> dict:
+    """Generate a lesson summary with the Anthropic API. Raises on any failure."""
+    prompt = (
+        "You are summarizing the source material for a single video lesson so a learner "
+        "can study from it. Using only the text below, write a study summary.\n\n"
+        f"Lesson title: {lesson_title or 'Untitled lesson'}\n\n"
+        f"Source text:\n\"\"\"\n{text[:6000]}\n\"\"\"\n\n"
+        "Respond with ONLY a JSON object, no markdown, in this exact shape:\n"
+        '{\"overview\": \"2-3 sentence plain-language summary of what the lesson teaches\", '
+        '\"points\": [\"3 to 5 concise key takeaways\"], '
+        '\"keyTerms\": [\"5 to 8 important terms or concepts\"]}\n'
+        "Ignore any sponsor messages, promo codes, or self-promotion in the source."
+    )
+    payload = json.dumps({
+        "model": ANTHROPIC_MODEL,
+        "max_tokens": 1024,
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode("utf-8")
+    request = urllib.request.Request(
+        ANTHROPIC_API_URL,
+        data=payload,
+        headers={
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        data = json.loads(response.read().decode("utf-8"))
+
+    raw = "".join(block.get("text", "") for block in data.get("content", []) if block.get("type") == "text")
+    match = re.search(r"\{.*\}", raw, re.S)
+    if not match:
+        raise ValueError("Claude did not return JSON.")
+    parsed = json.loads(match.group(0))
+
+    overview = str(parsed.get("overview", "")).strip()
+    points = [str(p).strip() for p in parsed.get("points", []) if str(p).strip()][:5]
+    key_terms = [str(t).strip() for t in parsed.get("keyTerms", []) if str(t).strip()][:8]
+    if not overview:
+        raise ValueError("Claude returned an empty summary.")
+    return {
+        "title": lesson_title or "Video summary",
+        "overview": overview,
+        "points": points,
+        "keyTerms": key_terms,
+        "transcriptLength": len(re.findall(r"[a-z0-9]+", text.lower())),
+        "engine": "claude",
+    }
+
+
+def build_summary(text: str, lesson_title: str = "") -> dict:
+    """Use Claude when an API key is configured; fall back to the local summarizer."""
+    if ANTHROPIC_API_KEY:
+        try:
+            return summarize_with_claude(text, lesson_title)
+        except Exception:
+            pass
+    return summarize_text(text, lesson_title)
 
 
 def normalize_manual_titles(titles: str = "") -> list[dict]:
@@ -699,7 +793,7 @@ def build_course(playlist_url: str, videos: list[dict], pace: str = "standard", 
     }
 
 
-class CourseTubeHandler(BaseHTTPRequestHandler):
+class VidoraHandler(BaseHTTPRequestHandler):
     def end_headers(self):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -821,7 +915,7 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
             with db_cursor(db) as cursor:
                 cursor.execute(
                     param("""
-                    SELECT users.id, users.name, users.email
+                    SELECT users.id, users.name, users.email, sessions.expires_at
                     FROM sessions
                     JOIN users ON users.id = sessions.user_id
                     WHERE sessions.token = %s
@@ -829,7 +923,12 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
                     (token,),
                 )
                 row = cursor.fetchone()
-                return public_user(row) if row else None
+                if not row:
+                    return None
+                if row["expires_at"] < now_iso():
+                    cursor.execute(param("DELETE FROM sessions WHERE token = %s"), (token,))
+                    return None
+                return public_user(row)
 
     def require_user(self) -> dict | None:
         user = self.current_user()
@@ -843,15 +942,13 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
         with db_connect() as db:
             with db_cursor(db) as cursor:
                 cursor.execute(
-                    param("INSERT INTO sessions (token, user_id, created_at) VALUES (%s, %s, %s)"),
-                    (token, user["id"], now_iso()),
+                    param("INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (%s, %s, %s, %s)"),
+                    (token, user["id"], now_iso(), session_expiry_iso()),
                 )
         self.send_json(
             200,
             {"user": user},
-            {
-                "Set-Cookie": self.session_cookie(token, 2592000)
-            },
+            {"Set-Cookie": self.session_cookie(token, SESSION_MAX_AGE)},
         )
 
     def do_POST(self):
@@ -965,21 +1062,25 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
                 return
 
             if self.path == "/api/video-summary":
+                if not self.require_user():
+                    return
                 body = self.read_json()
                 description = fetch_video_description(body.get("videoId", ""))
                 if not description:
                     self.send_json(422, {"error": "No readable YouTube video description was available for this lesson."})
                     return
-                self.send_json(200, {**summarize_text(description, body.get("title", "")), "source": "youtube-description"})
+                self.send_json(200, {**build_summary(description, body.get("title", "")), "source": "youtube-description"})
                 return
 
             if self.path == "/api/transcript-summary":
+                if not self.require_user():
+                    return
                 body = self.read_json()
                 transcript = re.sub(r"\s+", " ", str(body.get("transcript", ""))).strip()
                 if len(transcript) < 120:
                     self.send_json(422, {"error": "Paste a longer transcript so the summary has enough content to work from."})
                     return
-                self.send_json(200, {**summarize_text(transcript, body.get("title", "")), "source": "pasted-transcript"})
+                self.send_json(200, {**build_summary(transcript, body.get("title", "")), "source": "pasted-transcript"})
                 return
 
             self.send_response(404)
@@ -1031,13 +1132,14 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
                 with db_connect() as db:
                     with db_cursor(db) as cursor:
                         cursor.execute(
-                            param("INSERT INTO sessions (token, user_id, created_at) VALUES (%s, %s, %s)"),
-                            (token, user["id"], now_iso()),
+                            param("INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (%s, %s, %s, %s)"),
+                            (token, user["id"], now_iso(), session_expiry_iso()),
                         )
-                self.redirect(
-                    "/index.html",
-                    {"Set-Cookie": self.session_cookie(token, 2592000)},
-                )
+                self.send_response(302)
+                self.send_header("Location", "/index.html")
+                self.send_header("Set-Cookie", self.session_cookie(token, SESSION_MAX_AGE))
+                self.send_header("Set-Cookie", self.oauth_state_cookie("", 0))
+                self.end_headers()
             except Exception:
                 self.redirect("/index.html?auth=google_error", {"Set-Cookie": self.oauth_state_cookie("", 0)})
             return
@@ -1115,6 +1217,6 @@ class CourseTubeHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     init_db()
-    server = ThreadingHTTPServer(("127.0.0.1", PORT), CourseTubeHandler)
-    print(f"CourseTube Python server is running at http://localhost:{PORT}")
+    server = ThreadingHTTPServer(("127.0.0.1", PORT), VidoraHandler)
+    print(f"Vidora Python server is running at http://localhost:{PORT}")
     server.serve_forever()
